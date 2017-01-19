@@ -80,10 +80,12 @@ var Engine = (function(global) {
         };
         // If game's stop value is false, update timer and continue the game.
         if (!game.stop) {
-            seconds--;
-            updateTimer();
+            if (!game.paused) {
+                seconds--;
+                updateTimer();
+            }
             win.setTimeout(function() {
-                setTimer(seconds, game);
+                startTimer(seconds, game);
             }, 1000);
         };
     };
@@ -258,7 +260,13 @@ var Engine = (function(global) {
     function reset() {
         var displayElements = ['timer', 'life', 'score', 'tryagain', 'game-board'];
         var undisplayElements = ['instruction', 'start', 'header'];
-        doc.getElementById('start').onclick = function() {
+        var startbutton = doc.getElementById('start');
+
+        startbutton.onclick = function() {
+            document.getElementById('instructions').classList.add('hide');
+            startbutton.classList.add('hide');
+            document.body.classList.add('start');
+            document.getElementById('title').classList.add('titleStart');
             main();
             startTimer(60, game);
 

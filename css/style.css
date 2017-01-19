@@ -1,32 +1,105 @@
 @import url(http://fonts.googleapis.com/css?family=Lato:300,400,700);
+#viewporter {
+    display: none;
+}
+
+@media (max-width: 960px) {
+    body {
+        background-color: black;
+        color: white;
+        font-family: 'Lucida Bright', Georgia, serif;
+        font-size: 1.5em;
+    }
+    #viewporter {
+        display: block;
+        margin: 20%;
+    }
+    #viewporter::before {
+        content: "Running With Roaches";
+        display: block;
+        color: orange;
+        font-size: 2.5em;
+    }
+    #viewporter::after {
+        content: url(../images/enemy-bug.png);
+        animation-duration: 5s;
+        animation-name: slideout;
+        animation-iteration-count: infinite;
+        display: block;
+        font-size: 2.5em;
+    }
+    @keyframes slideout {
+        from {
+            margin-left: 0;
+            width: 100%;
+        }
+        to {
+            margin-left: 100%;
+            width: 300%;
+        }
+    }
+    section,
+    header,
+    div {
+        display: none;
+    }
+}
+
 body {
-    text-align: center;
     font-family: 'Lato', Arial, Helvetica, sans-serif;
     color: #808080;
     padding: 0;
     margin: 0;
+    text-align: center;
     font-size: 1.3em;
 }
 
-h1 {
-    margin-left: 2 0%;
+#container {
+    max-width: 960px;
+    display: flex;
+    align-items: center;
 }
 
 p {
     max-width: 450px;
 }
 
-ul {
-    text-align: justify;
-    width: 100px;
-    margin: 0 auto;
-    font-size: 0.8em;
-}
-
 li:hover {
     color: teal;
 }
 
-li:hover::before {
-    content: "!!";
+#instructions {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    align-content: center;
+}
+
+button {
+    min-height: 60px;
+    background-color: rgba(15, 240, 234, 0.6);
+    min-widht: 100px;
+}
+
+header {
+    text-align: center;
+}
+
+body.start {
+    transition: background-color 0.8s ease;
+    background-color: black;
+}
+
+h1#title.titleStart {
+    transition: color 0.8s ease;
+    color: orange;
+}
+
+section.hide,
+div.hide,
+#instructions.hide,
+button.hide,
+body.hide {
+    display: none;
 }

@@ -3,7 +3,7 @@ var allItems = [];
 var allEnemies = [];
 var enemyPositionY = [83, 150, 220, 300]
 var enemySpeeds = [101, 181, 201, 301, 420, 450, 700];
-
+var selectionCharacters = ['images/Star.png', 'images/Heart.png', 'images/Key.png', 'images/Gem-orange.png', 'images/Gem-blue.png', 'images/Gem-green.png'];
 
 
 
@@ -26,7 +26,7 @@ var Game = function() {
 
     this.level = -1;
     this.paused = false;
-}
+};
 
 Game.prototype.handleInput = function(key) {
     switch (key) {
@@ -43,9 +43,15 @@ Game.prototype.handleInput = function(key) {
         default:
             return;
 
-    };
+    }
 };
 
+Game.prototype.render = function() {
+    if (player.life == 0) {
+        this.stop = true;
+        this.gameOver();
+    }
+};
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 // Utilities
 
