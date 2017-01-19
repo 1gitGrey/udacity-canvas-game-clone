@@ -30,7 +30,6 @@ var Engine = (function(global) {
 
 
 
-
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
      */
@@ -133,6 +132,9 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
+        checkCollisions();
+        checkPickups();
+        checkGameStatus();
         // checkCollisions();
     }
 
@@ -178,7 +180,17 @@ var Engine = (function(global) {
             }
 
         }
-    };
+    }
+
+    function checkGameStatus() {
+
+
+
+        if (player.isDead) {
+            game.stop = true;
+            game.gameOver();
+        }
+    }
 
     /* This is called b
     y the update function and loops through all of the
@@ -192,6 +204,9 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.update(dt);
         });
+        allItems.forEach(function(item) {
+            item.update(dt);
+        })
         player.update();
     }
 
@@ -249,8 +264,11 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.render();
         });
-
+        allItems.forEach(function(item) {
+            item.render();
+        })
         player.render();
+        game.render();
     }
 
     /* This function does nothing but it could have been a good place to
@@ -260,13 +278,18 @@ var Engine = (function(global) {
     function reset() {
         var displayElements = ['timer', 'life', 'score', 'tryagain', 'game-board'];
         var undisplayElements = ['instruction', 'start', 'header'];
-        var startbutton = doc.getElementById('start');
+
 
         startbutton.onclick = function() {
             document.getElementById('instructions').classList.add('hide');
             startbutton.classList.add('hide');
+            document.getElementById('canvas').classList.remove('hide');
             document.body.classList.add('start');
             document.getElementById('title').classList.add('titleStart');
+            document.getElementById('timer').style.display = 'inline-block';
+
+
+
             main();
             startTimer(60, game);
 

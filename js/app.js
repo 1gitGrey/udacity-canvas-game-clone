@@ -4,9 +4,7 @@ var allEnemies = [];
 var enemyPositionY = [83, 150, 220, 300]
 var enemySpeeds = [101, 181, 201, 301, 420, 450, 700];
 var selectionCharacters = ['images/Star.png', 'images/Heart.png', 'images/Key.png', 'images/Gem-orange.png', 'images/Gem-blue.png', 'images/Gem-green.png'];
-
-
-
+var startbutton = document.getElementById('start');
 
 
 
@@ -36,10 +34,11 @@ Game.prototype.handleInput = function(key) {
         case 'space':
             this.paused = !this.paused;
             break;
-        case 'help':
+        case 'enter':
             //modal help info guide
+            startbutton.onclick();
         case 'info':
-            //ditto
+            this.paused = true;
         default:
             return;
 
@@ -52,8 +51,20 @@ Game.prototype.render = function() {
         this.gameOver();
     }
 };
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-// Utilities
+
+
+
+
+
+Game.prototype.gameOver = function() {
+
+        document.getElementById('canvas').classList.add('hide');
+
+
+
+    }
+    /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    // Utilities
 
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -114,7 +125,7 @@ var Player = function() {
     this.x = 404;
     this.y = 392;
     this.health = 7;
-
+    this.isDead = false;
 
 
 
@@ -188,12 +199,105 @@ Player.prototype.handleInput = function(key) {
 };
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+/** Item Class
+ * item that player uses to earn points, receive special powers, earn more health
+ * @constructor
+ */
+
+var Item = function() {
+    this.possibleX = [0, 100, 200, 300, 400, 500, 600, 800, 700];
+    this.possibleY = [80, 160, 240, 320, 400, 480];
+    this.x = this.randomizeX();
+    this.y = this.randomizeY();
+    allItems.push(this);
+}
+
+Item.prototype.randomizeX = function() {
+    var xO = this.possibleX[Math.floor(Math.random() * this.possibleX.length)];
+    return xO;
+
+};
+Item.prototype.randomizeY = function() {
+    var yO = this.possibleY[Math.floor(Math.random() * this.possibleY.length)];
+    return yO;
+};
+Item.prototype.update = function(dt) {
+    this.x * dt;
+    this.y * dt;
+};
+Item.prototype.reset = function() {
+    this.x = this.randomizeX();
+    this.y = this.randomizeY();
+}
+Item.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+
+}
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
+*/
+
+
+/** Helper Class
+ * item that player uses to earn points, receive special powers, earn more health
+ * @constructor
+ * @extends Item class
+ */
+
+var Helper = function() {
+    Item.call(this);
+    this.loadItem();
+    this.reset();
+}
+
+
+Helper.prototype = Object.create(Item.prototype);
+Helper.prototype.constructor = Helper;
+
+
+Helper.prototype.loadItem = function() {
+    this.possibleSprites = selectionCharacters;
+    this.sprite = this.possibleSprites[Math.floor(Math.random() * this.possibleSprites.length)]
+
+};
+
+Helper.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+
+
+Helper.prototype.reset = function() {
+    var dass = this;
+    dass.x = -101;
+    dass.y = -101;
+
+    setInterval(function() {
+        dass.loadItem();
+        Item.prototype.reset.call(dass);
+    }, 3000);
+
+};
+/*
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-var enemyA = new Enemy();
-var player = new Player();
 var game = new Game();
+var player = new Player();
+var enemyA = new Enemy();
+var enemyB = new Enemy();
+var enemyC = new Enemy();
+var enemyD = new Enemy();
+var enemyE = new Enemy();
+var item = new Helper();
+/*
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
@@ -206,8 +310,11 @@ document.addEventListener('keyup', function(e) {
         13: 'enter',
         80: 'pause',
         32: 'space',
-        72: 'help',
-        73: 'info'
+        73: 'info',
+        72: 'left',
+        74: 'down',
+        75: 'up',
+        76: 'right'
 
     };
 
