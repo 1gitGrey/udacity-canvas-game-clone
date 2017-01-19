@@ -21,13 +21,15 @@ var Engine = (function(global) {
      */
     var doc = global.document,
         win = global.window,
-        canvas = doc.createElement('canvas'),
+        canvas = doc.getElementById('canvas'),
         ctx = canvas.getContext('2d'),
-        lastTime;
+        lastTime,
+        seconds,
+        timer;
 
-    canvas.width = 505;
-    canvas.height = 606;
-    doc.body.appendChild(canvas);
+
+
+
 
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
@@ -45,9 +47,10 @@ var Engine = (function(global) {
         /* Call our update/render functions, pass along the time delta to
          * our update function since it may be used for smooth animation.
          */
-        update(dt);
-        render();
-
+        if (!game.paused) {
+            update(dt);
+            render();
+        }
         /* Set our lastTime variable which is used to determine the time delta
          * for the next time this function is called.
          */
@@ -56,17 +59,65 @@ var Engine = (function(global) {
         /* Use the browser's requestAnimationFrame function to call this
          * function again as soon as the browser is able to draw another frame.
          */
-        win.requestAnimationFrame(main);
-    }
 
+        win.requestAnimationFrame(main);
+
+    }
+    /**
+     * Sets a timer for the game.
+     * @param {number} time Total seconds of the timer
+     * @param {Game} game The new game instance
+     * @return {void}
+     */
+    function startTimer(time, game) {
+        timer = doc.getElementById('timer');
+        seconds = time;
+        // If out of time, game over.
+        // Set game's stop value to true.
+        if (seconds === 0) {
+            game.gameOver();
+            game.stop = true;
+        };
+        // If game's stop value is false, update timer and continue the game.
+        if (!game.stop) {
+            seconds--;
+            updateTimer();
+            win.setTimeout(function() {
+                setTimer(seconds, game);
+            }, 1000);
+        };
+    };
+    /**
+     * Updates the timer each second.
+     * @return {void}
+     */
+    function updateTimer() {
+        var timerStr;
+        var tempSeconds = seconds;
+        var tempMinutes = Math.floor(seconds / 60) % 60;
+        tempSeconds -= tempMinutes * 60;
+        timerStr = formatTimer(tempMinutes, tempSeconds);
+        timer.innerHTML = timerStr;
+    };
+    /**
+     * Format timer string displayed in the game.
+     * @param {number} minutes Remaining minutes of the timer
+     * @param {number} seconds Ramaining seconds of the timer
+     * @return {string}
+     */
+    function formatTimer(minutes, seconds) {
+        var formattedMinutes = (minutes < 10) ? '0' + minutes : minutes;
+        var formattedSeconds = (seconds < 10) ? '0' + seconds : seconds;
+
+        return formattedMinutes + ":" + formattedSeconds;
+    };
     /* This function does some initial setup that should only occur once,
      * particularly setting the lastTime variable that is required for the
      * game loop.
      */
     function init() {
-        reset();
         lastTime = Date.now();
-        main();
+        reset();
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -83,13 +134,58 @@ var Engine = (function(global) {
         // checkCollisions();
     }
 
-    /* This is called by the update function and loops through all of the
-     * objects within your allEnemies array as defined in app.js and calls
-     * their update() methods. It will then call the update function for your
-     * player object. These update methods should focus purely on updating
-     * the data/properties related to the object. Do your drawing in your
-     * render methods.
-     */
+    function checkCollisions() {
+        for (var i = 0; i < allEnemies.length; i++) {
+            if (Math.abs(player.x - allEnemies[i].x) < 50 && Math.abs(player.y - allEnemies[i].y) < 50) {
+                // If player is hit, reset player position.
+                player.reset();
+                if (player.health > 0) {
+                    // If player's life is more than 0, subtract one life.
+                    player.health--;
+                    // Update life.
+
+                };
+            };
+        };
+    };
+
+    function checkPickups() {
+        if (Math.abs(player.x - item.x) < 50 && Math.abs(player.y - item.y) < 50) {
+            switch (item.sprite) {
+                case 'images/Heart.png':
+                    player.health += 1;
+                    item.reset();
+                    break;
+                case 'images/Star.png':
+                    item.reset();
+                    break;
+                case 'images/Key.png':
+                    item.reset();
+                    break;
+                case 'images/Gem-orange.png':
+                    item.reset();
+                    break;
+                case 'images/Gem-blue.png':
+                    item.reset();
+                    break;
+                case 'images/Gem-green.png':
+                    item.reset();
+                    break;
+                default:
+                    return;
+            }
+
+        }
+    };
+
+    /* This is called b
+    y the update function and loops through all of the
+         * objects within your allEnemies array as defined in app.js and calls
+         * their update() methods. It will then call the update function for your
+         * player object. These update methods should focus purely on updating
+         * the data/properties related to the object. Do your drawing in your
+         * render methods.
+         */
     function updateEntities(dt) {
         allEnemies.forEach(function(enemy) {
             enemy.update(dt);
@@ -108,15 +204,16 @@ var Engine = (function(global) {
          * for that particular row of the game level.
          */
         var rowImages = [
-                'images/water-block.png',   // Top row is water
-                'images/stone-block.png',   // Row 1 of 3 of stone
-                'images/stone-block.png',   // Row 2 of 3 of stone
-                'images/stone-block.png',   // Row 3 of 3 of stone
-                'images/grass-block.png',   // Row 1 of 2 of grass
-                'images/grass-block.png'    // Row 2 of 2 of grass
+                'images/water-block.png', // Top row is water
+                'images/stone-block.png', // Row 1 of 4 of stone
+                'images/stone-block.png', // Row 2 of 4 of stone
+                'images/stone-block.png', // Row 3 of 4 of stone
+                'images/stone-block.png', // Row 4 of 4 of stone
+                'images/grass-block.png', // Row 1 of 2 of grass
+                'images/grass-block.png' // Row 2 of 2 of grasss
             ],
-            numRows = 6,
-            numCols = 5,
+            numRows = 7,
+            numCols = 9,
             row, col;
 
         /* Loop through the number of rows and columns we've defined above
@@ -159,7 +256,14 @@ var Engine = (function(global) {
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        // noop
+        var displayElements = ['timer', 'life', 'score', 'tryagain', 'game-board'];
+        var undisplayElements = ['instruction', 'start', 'header'];
+        doc.getElementById('start').onclick = function() {
+            main();
+            startTimer(60, game);
+
+
+        }
     }
 
     /* Go ahead and load all of the images we know we're going to need to
@@ -171,6 +275,17 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
+        'images/Heart.png',
+        'images/Star.png',
+        'images/Selector.png',
+        'images/Key.png',
+        'images/Gem-blue.png',
+        'images/Gem-green.png',
+        'images/Gem-orange.png',
+        'images/char-horn-girl.png',
+        'images/char-princess-girl.png',
+        'images/char-pink-girl.png',
+        'images/char-cat-girl.png',
         'images/char-boy.png'
     ]);
     Resources.onReady(init);

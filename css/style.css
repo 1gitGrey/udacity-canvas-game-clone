@@ -1,0 +1,32 @@
+@import url(http://fonts.googleapis.com/css?family=Lato:300,400,700);
+body {
+    text-align: center;
+    font-family: 'Lato', Arial, Helvetica, sans-serif;
+    color: #808080;
+    padding: 0;
+    margin: 0;
+    font-size: 1.3em;
+}
+
+h1 {
+    margin-left: 2 0%;
+}
+
+p {
+    max-width: 450px;
+}
+
+ul {
+    text-align: justify;
+    width: 100px;
+    margin: 0 auto;
+    font-size: 0.8em;
+}
+
+li:hover {
+    color: teal;
+}
+
+li:hover::before {
+    content: "!!";
+}
