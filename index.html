@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Effective JavaScript: Frogger</title>
+    <!-- Latest compiled and minified CSS & JS -->
+    <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.min.css">
+    <script src="jquery/dist/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <aside id="viewporter">Sorry this program does not currently support viewing on mobile / screens smaller than 959 px;</aside>
+    <header>
+        <h1 id="title"><span>R</span>unning with <span>R</span>oaches</h1>
+        <hr>
+        <div id="instructions">
+            <h3>Objective:</h3>
+            <p>Listen up chap, you have <span>7</span> lives, there are <span>7</span> levels with <span>7</span> friends to save. Can you do it before the clock runs out?
+                <p>Collect as many points as you can through the levels without losing all of your lives.</p>
+                <hr>
+                <h3>Controls:</h3>
+                <p>Use the arrow control keys on right side of keyboard to control your player. (Alternatively you may also use VIM controls (h, j, k, l)</p>
+                <h3>Collect the following tokens:</h3>
+                <ul>
+                    <li id="bluegem">Blue Gem</li>
+                    <li id="greengem">Green Gem</li>
+                    <li id="orangegem">Orange Gem</li>
+                    <li id="star">Star</li>
+                    <li id="key">Key</li>
+                </ul>
+        </div>
+        <div id="timer"></div>
+        <div id="life"></div>
+        <div id="score"></div>
+    </header>
+    <section id="game-board" class="">
+        <canvas id="canvas" height="757" width="909"></canvas>
+    </section>
+    <section id="controls">
+        <button id="start">Start</button>
+        <button id="tryagain" onclick="location.reload()">Reset</button>
+    </section>
+    <script src="js/resources.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/engine.js"></script>
+    <script>
+    var goo = '<i class="fa fa-heart"></i>'
+    document.getElementById('life').parentNode.appendChil(goo)
+    document.getElementById('life').innerHTML(goo)
+    </script>
+</body>
