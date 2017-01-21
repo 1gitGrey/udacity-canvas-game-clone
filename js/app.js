@@ -20,30 +20,25 @@ var startbutton = document.getElementById('start');
  */
 var Game = function() {
 
-    // 0 index level array -1 means game has not yet started / 0 is boot screen
-
+    // 0 index level array -1 means game has not yet started
+    // 0 is level 1
     this.level = -1;
+    this.minEnemySpeed = 1
+    this.maxEnemySpeed = 5
+        // start game in active state
     this.paused = false;
+
+
+    this.player = new Player();
+    this.allEnemies = [];
+    this.selectChar = new SelectChar();
+
+    this.selectChar.isActive = true;
+
+    this.leveler();
 };
 
-Game.prototype.handleInput = function(key) {
-    switch (key) {
-        case 'pause':
-            this.paused = !this.paused;
-            break;
-        case 'space':
-            this.paused = !this.paused;
-            break;
-        case 'enter':
-            //modal help info guide
-            startbutton.onclick();
-        case 'info':
-            this.paused = true;
-        default:
-            return;
 
-    }
-};
 
 Game.prototype.render = function() {
     if (player.life == 0) {
@@ -51,9 +46,6 @@ Game.prototype.render = function() {
         this.gameOver();
     }
 };
-
-
-
 
 
 Game.prototype.gameOver = function() {
