@@ -240,6 +240,42 @@ Item.prototype.render = function() {
 ---
 */
 
+var Health = function() {
+    this.value = 7;
+    this.sprite = "images/health.png";
+    this.pair = document.getElementById('life')
+};
+
+
+Health.prototype.render = function() {
+    var life = document.createElement("health");
+    health.src = "images/health.png";
+    for (i = 0; i < this.value; i++) {
+        this.pair.appendChild(life);
+    }
+}
+
+Health.prototype.update = function() {
+    if (this.value < 1) {
+        game.gameOver();
+    }
+}
+
+Health.prototype.heal = function() {
+
+    this.value = this.value + 1;
+
+}
+
+Health.prototype.hurt = function() {
+    this.value = this.value - 1;
+}
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
+*/
+
 
 /** Helper Class
  * item that player uses to earn points, receive special powers, earn more health
@@ -278,7 +314,7 @@ Helper.prototype.reset = function() {
     setInterval(function() {
         dass.loadItem();
         Item.prototype.reset.call(dass);
-    }, 3000);
+    }, 4500);
 
 };
 /*
@@ -295,6 +331,7 @@ var enemyC = new Enemy();
 var enemyD = new Enemy();
 var enemyE = new Enemy();
 var item = new Helper();
+var health = new Health();
 /*
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 */

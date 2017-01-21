@@ -145,7 +145,7 @@ var Engine = (function(global) {
                 player.reset();
                 if (player.health > 0) {
                     // If player's life is more than 0, subtract one life.
-                    player.health--;
+                    health.hurt();
                     // Update life.
 
                 };
@@ -157,10 +157,11 @@ var Engine = (function(global) {
         if (Math.abs(player.x - item.x) < 50 && Math.abs(player.y - item.y) < 50) {
             switch (item.sprite) {
                 case 'images/Heart.png':
-                    player.health += 1;
+                    health.heal();
                     item.reset();
                     break;
                 case 'images/Star.png':
+                    3 * health.heal();
                     item.reset();
                     break;
                 case 'images/Key.png':
@@ -208,6 +209,7 @@ var Engine = (function(global) {
             item.update(dt);
         })
         player.update();
+        health.update();
     }
 
     /* This function initially draws the "game level", it will then call
@@ -269,6 +271,7 @@ var Engine = (function(global) {
         })
         player.render();
         game.render();
+        health.render();
     }
 
     /* This function does nothing but it could have been a good place to
@@ -312,6 +315,7 @@ var Engine = (function(global) {
         'images/Key.png',
         'images/Gem-blue.png',
         'images/Gem-green.png',
+        'images/health.png',
         'images/Gem-orange.png',
         'images/char-horn-girl.png',
         'images/char-princess-girl.png',

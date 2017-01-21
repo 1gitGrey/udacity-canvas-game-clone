@@ -118,3 +118,7 @@ canvas.hide {
 section#controls {
     display: block;
 }
+
+header {
+    text-align: justify;
+}
