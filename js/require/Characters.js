@@ -82,6 +82,7 @@ var Player = function(game, x, y) {
     this.sprite = 'images/char-boy.png';
 
     this.health = 7;
+    om
     this.has = {};
 
     this.isHero = false;
