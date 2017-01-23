@@ -63,13 +63,13 @@ var Game = function () {
     this.lives = this.maxLives;
 
     /**
-     * Current game board.
+     * Current game scenario.
      * The game must be started at a level
-     * before {@code this.board} be initialized
-     * to the appropriate board.
-     * @type {Board}
+     * before {@code this.scenario} be initialized
+     * to the appropriate scenario.
+     * @type {Scenario}
      */
-    this.board = null;
+    this.scenario = null;
 
     /**
      * Game character selector.
@@ -149,12 +149,12 @@ Game.prototype.levelUp = function () {
         this.minEnemySpeed += 1;
         this.maxEnemySpeed += 1;
 
-        // "Delete" the previous board.
-        this.board = null;
+        // "Delete" the previous scenario.
+        this.scenario = null;
 
         // Retrieves the current level {@code this.levels[this.level]}
-        // and uses it to construct the new board.
-        this.board = new Board(this.levels[this.level]);
+        // and uses it to construct the new scenario.
+        this.scenario = new Scenario(this.levels[this.level]);
 
         // Resets the number of lives.
         this.lives = this.maxLives;
@@ -170,11 +170,11 @@ Game.prototype.levelUp = function () {
         this.enemies = [];
 
         // The number of enemies equals the number
-        // of "free roads" of the board.
-        this.numEnemies = this.board.roads.length;
+        // of "free roads" of the scenario.
+        this.numEnemies = this.scenario.roads.length;
         for (var i = 0; i < this.numEnemies; ++i) {
-            // Put an enemy on a free road of the board.
-            var enemy = new Enemy(this, -1, this.board.roads[i]);
+            // Put an enemy on a free road of the scenario.
+            var enemy = new Enemy(this, -1, this.scenario.roads[i]);
 
             // Assigns a random speed to each enemy.
             enemy.speed = this.randomInt(this.minEnemySpeed, this.maxEnemySpeed);
@@ -192,7 +192,7 @@ Game.prototype.levelUp = function () {
  * @return {boolean} Whether the player was hit by an enemy.
  */
 Game.prototype.wasPlayerHit = function () {
-    if (this.player.indestructible) {
+    if (this.player.trump) {
         return false;
     }
 
@@ -211,10 +211,10 @@ Game.prototype.wasPlayerHit = function () {
 };
 
 /**
- * @return {boolean} Whether the player is not indesctructible and is on a water block on the board.
+ * @return {boolean} Whether the player is not indesctructible and is on a water block on the scenario.
  */
 Game.prototype.isPlayerDrowning = function () {
-    return !this.player.indestructible && this.board.getBlock(this.player.y, this.player.x) === Block.Water;
+    return !this.player.trump && this.scenario.getComponent(this.player.y, this.player.x) === Component.Water;
 };
 
 /**
@@ -251,7 +251,7 @@ Game.prototype.reset = function () {
         this.gameOverCallback(this);
     } else {
         this.lifeLostCallback(this.lives);
-        this.board.resetItems();
+        this.scenario.resetItems();
         this.spawnPlayer();
     }
 };
@@ -273,29 +273,29 @@ Game.prototype.restart = function () {
  * @return {void}
  */
 Game.prototype.spawnPlayer = function () {
-    this.player.x = this.randomInt(0, this.board.width - 1);
-    this.player.y = this.board.height - 1;
+    this.player.x = this.randomInt(0, this.scenario.width - 1);
+    this.player.y = this.scenario.height - 1;
 };
 
 /**
  * Resets {@code this.player} (x, y) coordinates to
- * ({@code 0}, {@code this.board.height - 1}) and puts
- * an item at the bottom row of the board.
+ * ({@code 0}, {@code this.scenario.height - 1}) and puts
+ * an item at the bottom row of the scenario.
  * @return {void}
  */
 Game.prototype.helpPlayer = function () {
     if (this.lives >= 1) {
         this.player.x = 0;
-        this.player.y = this.board.height - 1;
+        this.player.y = this.scenario.height - 1;
 
         var items = [Item.Heart, Item.Star, Item.Key, Item.Rock, Item.BlueGem, Item.GreenGem];
         var item = items[this.randomInt(0, items.length - 1)];
 
-        // Put the item in the first free cell of the last row of the board.
-        var row = this.board.height - 1;
-        for (var col = this.board.width - 1; col > 0; --col) {
-            if (this.board.getItem(row, col) === Item.None) {
-                this.board.setItem(row, col, item);
+        // Put the item in the first free cell of the last row of the scenario.
+        var row = this.scenario.height - 1;
+        for (var col = this.scenario.width - 1; col > 0; --col) {
+            if (this.scenario.getItem(row, col) === Item.None) {
+                this.scenario.setItem(row, col, item);
                 this.lives--;
                 this.lifeLostCallback(this.lives);
 
@@ -309,17 +309,17 @@ Game.prototype.helpPlayer = function () {
 /**
  * Assigns an array of string (each string describing a level) to {@code this.levels}.
  * <p>Each string of the array will be
- * passed to the {@code Board} constructor and defines how the board
+ * passed to the {@code Scenario} constructor and defines how the scenario
  * will be rendered on the screen.</p>
  * <p>The format of each level is
  * <em>columns:rows:roads:blocks:items</em> where
  * <ul>
- *      <li>columns (integer) : the number of columns of the board.</li>
- *      <li>rows (integer) : the number of rows of the board.</li>
+ *      <li>columns (integer) : the number of columns of the scenario.</li>
+ *      <li>rows (integer) : the number of rows of the scenario.</li>
  *      <li>roads (integer list) : the row indexes on which enemies can be spawned.</li>
- *      <li>blocks (string of length columns x rows) : the map of the board. The valid characters
- *          of this string are the values of the {@code Block} enumeration.</li>
- *      <li>items (string of length columns x rows) : the map of the initial items on the board. The
+ *      <li>blocks (string of length columns x rows) : the map of the scenario. The valid characters
+ *          of this string are the values of the {@code Component} enumeration.</li>
+ *      <li>items (string of length columns x rows) : the map of the initial items on the scenario. The
  *          valid characters of this string are the values of the {@code Item} enumeration.</li>
  * </ul>
  * @return {void}
@@ -352,22 +352,22 @@ Game.prototype.initializePlayer = function () {
     });
 
     this.player.onGain(Item.Star, function (game) {
-        if (game.player.indestructible) {
+        if (game.player.trump) {
             return;
         }
 
-        game.player.indestructible = true;
+        game.player.trump = true;
 
         var sprite = game.player.sprite;
 
-        // Use a different sprite for the player when he is indestructible.
+        // Use a different sprite for the player when he is trump.
         // This suppose that for a sprite name 'player.png', there is an
         // associated sprite name 'player-star.png'.
         game.player.sprite = sprite.substring(0, sprite.length - 4) + '-star.png';
 
         // The player will return to normal (sadly) after 1 second.
         setTimeout(function () {
-            game.player.indestructible = false;
+            game.player.trump = false;
             game.player.sprite = sprite;
         }, 1000);
     });
@@ -376,19 +376,19 @@ Game.prototype.initializePlayer = function () {
         game.levelUp();
     });
 
-    // All the water blocks on the board are turned into stone blocks
+    // All the water blocks on the scenario are turned into stone blocks
     // when the player gains a 'rock' item.
     this.player.onGain(Item.Rock, function (game) {
         var pos = []; // To keep track of the positions of the water blocks.
         var level = game.level;
 
-        for (var row = 0; row < game.board.height; ++row) {
-            for (var col = 0; col < game.board.width; ++col) {
-                var block = game.board.getBlock(row, col);
+        for (var row = 0; row < game.scenario.height; ++row) {
+            for (var col = 0; col < game.scenario.width; ++col) {
+                var block = game.scenario.getComponent(row, col);
 
-                if (block === Block.Water) {
+                if (block === Component.Water) {
                     pos.push({row: row, col: col});
-                    game.board.setBlock(row, col, Block.Stone);
+                    game.scenario.setComponent(row, col, Component.Stone);
                 }
             }
         }
@@ -396,7 +396,7 @@ Game.prototype.initializePlayer = function () {
         setTimeout(function () {
             if (level === game.level) { // No need to undo the effects of this item if the player has already cleared the level.
                 for (var i = 0; i < pos.length; ++i) {
-                    game.board.setBlock(pos[i].row, pos[i].col, Block.Water);
+                    game.scenario.setComponent(pos[i].row, pos[i].col, Component.Water);
                 }
             }
         }, 1000);
@@ -579,12 +579,12 @@ Game.prototype.onGameResumed = function (callback) {
 /**
  * Checks if the player has cleared the current level.
  * A level is cleared when the player is at the top row
- * of the board {@code this.player.y === 0} and on a grass block
- * {@code this.board.getBlock(this.player.y, this.player.x) === Block.Grass}
+ * of the scenario {@code this.player.y === 0} and on a grass block
+ * {@code this.scenario.getComponent(this.player.y, this.player.x) === Component.Grass}
  * @return {boolean} true if the level is cleared.
  */
 Game.prototype.isLevelCleared = function () {
-    return (this.player.y === 0) && (this.board.getBlock(this.player.y, this.player.x) === Block.Grass);
+    return (this.player.y === 0) && (this.scenario.getComponent(this.player.y, this.player.x) === Component.Grass);
 };
 
 /**
@@ -610,17 +610,17 @@ Game.prototype.randomInt = function (min, max) {
 
 
 /**
- * Block types which compose the board.
+ * Component types which compose the scenario.
  * @enum {string}
  */
-var Block = {
+var Component = {
     Water: 'W',
     Grass: 'G',
     Stone: 'S'
 };
 
 /**
- * Kinds of items which can be available on the board.
+ * Kinds of items which can be available on the scenario.
  * @enum {string}
  */
 var Item = {
@@ -635,29 +635,29 @@ var Item = {
 };
 
 /**
- * Board class.
- * Represents the board on which the game is played.
+ * Scenario class.
+ * Represents the scenario on which the game is played.
  * It is the first layer rendered.
- * @param {string} level A string representation of the board (columns:rows:roads:blocks:items).
+ * @param {string} level A string representation of the scenario (columns:rows:roads:blocks:items).
  * @constructor
  */
-var Board = function (level) {
-    // Array of strings containing the different parts of the board.
+var Scenario = function (level) {
+    // Array of strings containing the different parts of the scenario.
     // data[0] = number of columns.
     // data[1] = number of rows.
     // data[2] = list of roads.
-    // data[3] = board map.
+    // data[3] = scenario map.
     // data[4] = items map.
     var data = level.split(':');
 
     /**
-     * Number of columns of the board.
+     * Number of columns of the scenario.
      * @type {number}
      */
     this.width = parseInt(data[0]);
 
     /**
-     * Number of rows of the board.
+     * Number of rows of the scenario.
      * @type {number}
      */
     this.height = parseInt(data[1]);
@@ -677,8 +677,8 @@ var Board = function (level) {
     }
 
     /**
-     * Blocks composing the board. Each block value must be
-     * one of the values of the enumeration {@code Block}.
+     * Components composing the scenario. Each block value must be
+     * one of the values of the enumeration {@code Component}.
      * @type {string}
      */
     this.blocks = data[3];
@@ -688,14 +688,14 @@ var Board = function (level) {
     // before manipulating it.
     if (data.length > 4) {
         /**
-         * Items available on the board. Each item value
+         * Items available on the scenario. Each item value
          * must be one of the values of the enumeration {@code Item}.
          * @type {string}
          */
         this.items = data[4];
 
         /**
-         * Initial items configuration of the board.
+         * Initial items configuration of the scenario.
          * Can be used to reset {@code this.items} to its
          * initial value.
          * @type {Array.<string>}
@@ -708,9 +708,9 @@ var Board = function (level) {
  * Gets the block at position (row, col).
  * @param {number} row The x position of the block.
  * @param {number} col The y position of the block.
- * @return {Block}
+ * @return {Component}
  */
-Board.prototype.getBlock = function (row, col) {
+Scenario.prototype.getComponent = function (row, col) {
     return this.blocks.charAt(row * this.width + col);
 };
 
@@ -718,13 +718,13 @@ Board.prototype.getBlock = function (row, col) {
  * Changes the value of the block at position (row, col).
  * @param {number} row The x position of the block.
  * @param {number} col The y position of the block.
- * @param {Block} the new block value.
+ * @param {Component} the new block value.
  * @return {void}
  */
-Board.prototype.setBlock = function (row, col, newBlock) {
+Scenario.prototype.setComponent = function (row, col, newComponent) {
     var index = row * this.width + col;
 
-    this.blocks = this.blocks.substring(0, index) + newBlock + this.blocks.substring(index + 1);
+    this.blocks = this.blocks.substring(0, index) + newComponent + this.blocks.substring(index + 1);
 };
 
 /**
@@ -733,7 +733,7 @@ Board.prototype.setBlock = function (row, col, newBlock) {
  * @param {number} col The y position of the item.
  * @return {Item}
  */
-Board.prototype.getItem = function (row, col) {
+Scenario.prototype.getItem = function (row, col) {
     return this.items === undefined ? Item.None : this.items.charAt(row * this.width + col);
 };
 
@@ -744,7 +744,7 @@ Board.prototype.getItem = function (row, col) {
  * @param {Item} the new item value.
  * @return {void}
  */
-Board.prototype.setItem = function (row, col, newItem) {
+Scenario.prototype.setItem = function (row, col, newItem) {
     // In case, there were no items at the beginning of the game,
     // initialize {@code this.items} before modifying it.
     if (this.items === undefined) {
@@ -765,7 +765,7 @@ Board.prototype.setItem = function (row, col, newItem) {
  * @param {number} col The y position of the item.
  * @return {void}
  */
-Board.prototype.removeItem = function (row, col) {
+Scenario.prototype.removeItem = function (row, col) {
     this.setItem(row, col, Item.None);
 };
 
@@ -773,13 +773,13 @@ Board.prototype.removeItem = function (row, col) {
  * Restores {@code this.items} at its initial value.
  * @return {void}
  */
-Board.prototype.resetItems = function () {
+Scenario.prototype.resetItems = function () {
     this.items = this.initialItems;
 };
 
 /**
  * Character class.
- * Represents any character on the board.
+ * Represents any character on the scenario.
  * @param {Game} game The game the character belongs to.
  * @param {number} x The initial x position of the character.
  * @param {number} y The initial y position of the character.
@@ -853,13 +853,13 @@ Enemy.prototype.constructor = Enemy;
 Enemy.prototype.update = function (dt) {
     this.x += this.speed * dt; // this.x = this.x + ds where ds (distance travelled during dt) = speed * dt.
 
-    if (this.x >= this.game.board.width) {
-        // Spawn an enemy at the left, off the board to have the impression that
-        // the roads are not limited by the dimensions of the board.
+    if (this.x >= this.game.scenario.width) {
+        // Spawn an enemy at the left, off the scenario to have the impression that
+        // the roads are not limited by the dimensions of the scenario.
         this.x = -1;
 
         // Randomely choose a road on which spawn the enemy.
-        this.y = this.game.board.roads[this.game.randomInt(0, this.game.board.roads.length - 1)];
+        this.y = this.game.scenario.roads[this.game.randomInt(0, this.game.scenario.roads.length - 1)];
 
         // Randomely choose a speed at which the enemy will run between enemies minimal and maximal speeds.
         this.speed = this.game.randomInt(this.game.minEnemySpeed, this.game.maxEnemySpeed);
@@ -894,7 +894,7 @@ var Player = function (game, x, y) {
      * damage by enemies and can not drown.
      * @type {boolean}
      */
-    this.indestructible = false;
+    this.trump = false;
 };
 
 Player.prototype = Object.create(Character.prototype);
@@ -918,12 +918,12 @@ Player.prototype.update = function () {
  * @param {function(Game): void} callback The function to call.
  * @return {void}
  */
-Player.prototype.onGain = function (item, callback) {
+Player.prototype.has = function (item, callback) {
     this.gainCallbacks[item] = callback;
 };
 
 /**
- * Handles keyboard events.
+ * Handles keyscenario events.
  * @param {string} key The pressed key id.
  * @return {void}
  */
@@ -940,12 +940,12 @@ Player.prototype.handleInput = function (key) {
             }
             break;
         case 'right':
-            if (this.x < this.game.board.width - 1) {
+            if (this.x < this.game.scenario.width - 1) {
                 this.moveTo(this.x + 1, this.y);
             }
             break;
         case 'down':
-            if (this.y < this.game.board.height - 1) {
+            if (this.y < this.game.scenario.height - 1) {
                 this.moveTo(this.x, this.y + 1);
             }
             break;
@@ -961,7 +961,7 @@ Player.prototype.handleInput = function (key) {
             break;
         case 'quit':
             this.game.resume(); // Just in case the game was paused before quitting.
-            this.game.characterSelector.hasFocus = true;
+            this.game.Selector.isActive = true;
             this.game.restart();
         default:
             break;
@@ -983,7 +983,7 @@ Player.prototype.moveTo = function (x, y) {
     this.x = x;
     this.y = y;
 
-    var item = this.game.board.getItem(this.y, this.x);
+    var item = this.game.scenario.getItem(this.y, this.x);
 
     // If there is an item at the new position
     if (item != Item.None) {
@@ -993,8 +993,8 @@ Player.prototype.moveTo = function (x, y) {
             this.gainCallbacks[item](this.game);
         }
 
-        // Remove the item of the board.
-        this.game.board.removeItem(y, x);
+        // Remove the item of the scenario.
+        this.game.scenario.removeItem(y, x);
     }
 };
 
@@ -1004,12 +1004,12 @@ Player.prototype.moveTo = function (x, y) {
  * Used to select a character.
  * @constructor
  */
-var CharacterSelector = function () {
+var Selector = function () {
     /**
      * List of characters between which one should be selected.
      * @type {Array.<object>}
      */
-    this.characters = null;
+    this.allCharacters = null;
 
     /**
      * The current position of the selector.
@@ -1022,7 +1022,7 @@ var CharacterSelector = function () {
      * rendered on the screen or not.
      * @type {boolean}
      */
-    this.hasFocus = false;
+    this.isActive = false;
 
     /**
      * Function to call when a character has been selected.
@@ -1037,16 +1037,16 @@ var CharacterSelector = function () {
  * @param {function(object): void} callback The function to call.
  * @return {void}
  */
-CharacterSelector.prototype.onCharacterSelected = function (callback) {
+Selector.prototype.onCharacterSelected = function (callback) {
     this.characterSelectedCallback = callback;
 };
 
 /**
- * Handles keyboard key pressed events
+ * Handles keyscenario key pressed events
  * @param {string} key The pressed key id.
  * @return {void}
  */
-CharacterSelector.prototype.handleInput = function (key) {
+Selector.prototype.handleInput = function (key) {
     switch (key) {
         case 'left':
             if (this.position > 0) {
@@ -1059,8 +1059,8 @@ CharacterSelector.prototype.handleInput = function (key) {
             }
             break;
         case 'enter':
-            if (this.position >= 0 && this.position <= this.characters.length - 1) {
-                this.characterSelectedCallback(this.characters[this.position]);
+            if (this.position >= 0 && this.position <= this.allCharacters.length - 1) {
+                this.characterSelectedCallback(this.allCharacters[this.position]);
             }
             break;
         default:
