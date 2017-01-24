@@ -36,7 +36,7 @@ var Game = function () {
      * there is no enemy (the array {@code this.ememies} is empty).
      * @type {Array.<Enemy>}
      */
-    this.enemies = [];
+    this.allEnemies = [];
 
     /**
      * Minimum enemy speed.
@@ -73,13 +73,13 @@ var Game = function () {
 
     /**
      * Game character selector.
-     * @type {CharacterSelector}
+     * @type {Selector}
      */
-    this.characterSelector = new CharacterSelector();
+    this.selector = new Selector();
 
     // At the beginning, the character selector has the focus
     // to allow player selection.
-    this.characterSelector.hasFocus = true;
+    this.selector.isActive = true;
 
     /**
      * Whether the game is paused or not.
@@ -95,13 +95,13 @@ var Game = function () {
     this.initializePlayer();
 
     // Initializes in-game events handlers.
-    this.initializeGameCallbacks();
+    //this.initializeGameCallbacks();
 
     // Starts the game at level 0.
     this.levelUp();
 
     var that = this;
-    document.addEventListener('keyup', function (e) {
+  /*  document.addEventListener('keyup', function (e) {
         var allowedKeys = {
             37: 'left',
             38: 'up',
@@ -113,12 +113,12 @@ var Game = function () {
             81: 'quit'
         };
 
-        if (that.characterSelector.hasFocus) {
-            that.characterSelector.handleInput(allowedKeys[e.keyCode]);
+        if (that.selector.isActive) {
+            that.selector.handleInput(allowedKeys[e.keyCode]);
         } else {
             that.player.handleInput(allowedKeys[e.keyCode]);
         }
-    });
+    }); */
 };
 
 /**
@@ -164,22 +164,23 @@ Game.prototype.levelUp = function () {
         this.lifeGainedCallback(this.lives);
 
         // Put the player on the screen.
-        this.spawnPlayer();
+      //  this.spawnPlayer();
+      this.player.reset();
 
         // "Delete" all the previous enemies.
-        this.enemies = [];
+        this.allEnemies = [];
 
         // The number of enemies equals the number
-        // of "free roads" of the scenario.
-        this.numEnemies = this.scenario.roads.length;
+        // of "free lanes" of the scenario.
+        this.numEnemies = this.scenario.lanes.length;
         for (var i = 0; i < this.numEnemies; ++i) {
-            // Put an enemy on a free road of the scenario.
-            var enemy = new Enemy(this, -1, this.scenario.roads[i]);
+            // Put an enemy on a free lane of the scenario.
+            var enemy = new Enemy(this, -1, this.scenario.lanes[i]);
 
             // Assigns a random speed to each enemy.
             enemy.speed = this.randomInt(this.minEnemySpeed, this.maxEnemySpeed);
 
-            this.enemies.push(enemy);
+            this.allEnemies.push(enemy);
         }
 
         // The previous level was cleared. Handles this event
@@ -191,7 +192,7 @@ Game.prototype.levelUp = function () {
 /**
  * @return {boolean} Whether the player was hit by an enemy.
  */
-Game.prototype.wasPlayerHit = function () {
+Game.prototype.didMyDudeDie = function () {
     if (this.player.trump) {
         return false;
     }
@@ -199,14 +200,15 @@ Game.prototype.wasPlayerHit = function () {
     // Iterates through {@code this.enemies} and checks
     // if one of the enemies is sufficiently close to the
     // player to consider that it hits him.
-    for (var i = 0; i < this.numEnemies; ++i) {
-        var enemy = this.enemies[i];
+  /*  for (var i = 0; i < this.numEnemies; ++i) {
+        var enemy = this.allEnemies[i];
 
         if (this.closeEnough(this.player.x, enemy.x) && this.player.y === enemy.y) {
             return true;
         }
     }
-
+*/
+    checkCollisions();
     return false;
 };
 
@@ -252,7 +254,8 @@ Game.prototype.reset = function () {
     } else {
         this.lifeLostCallback(this.lives);
         this.scenario.resetItems();
-        this.spawnPlayer();
+        //this.spawnPlayer();
+        this.player.reset();
     }
 };
 
@@ -271,12 +274,11 @@ Game.prototype.restart = function () {
 /**
  * Resets {@code this.player} x and y coordinates.
  * @return {void}
- */
 Game.prototype.spawnPlayer = function () {
     this.player.x = this.randomInt(0, this.scenario.width - 1);
     this.player.y = this.scenario.height - 1;
 };
-
+*/
 /**
  * Resets {@code this.player} (x, y) coordinates to
  * ({@code 0}, {@code this.scenario.height - 1}) and puts
@@ -312,12 +314,12 @@ Game.prototype.helpPlayer = function () {
  * passed to the {@code Scenario} constructor and defines how the scenario
  * will be rendered on the screen.</p>
  * <p>The format of each level is
- * <em>columns:rows:roads:blocks:items</em> where
+ * <em>columns:rows:lanes:components:items</em> where
  * <ul>
  *      <li>columns (integer) : the number of columns of the scenario.</li>
  *      <li>rows (integer) : the number of rows of the scenario.</li>
- *      <li>roads (integer list) : the row indexes on which enemies can be spawned.</li>
- *      <li>blocks (string of length columns x rows) : the map of the scenario. The valid characters
+ *      <li>lanes (integer list) : the row indexes on which enemies can be spawned.</li>
+ *      <li>components (string of length columns x rows) : the map of the scenario. The valid characters
  *          of this string are the values of the {@code Component} enumeration.</li>
  *      <li>items (string of length columns x rows) : the map of the initial items on the scenario. The
  *          valid characters of this string are the values of the {@code Item} enumeration.</li>
@@ -346,12 +348,12 @@ Game.prototype.initializeLevels = function () {
  * @return {void}
  */
 Game.prototype.initializePlayer = function () {
-    this.player.onGain(Item.Heart, function (game) {
-        game.lives++;
-        game.lifeGainedCallback(game.lives);
+    this.player.has(Item.Heart, function (game) {
+        this.player.heal();
+      //  game.lifeGainedCallback(dw.lives);
     });
 
-    this.player.onGain(Item.Star, function (game) {
+    this.player.has(Item.Star, function (game) {
         if (game.player.trump) {
             return;
         }
@@ -363,7 +365,7 @@ Game.prototype.initializePlayer = function () {
         // Use a different sprite for the player when he is trump.
         // This suppose that for a sprite name 'player.png', there is an
         // associated sprite name 'player-star.png'.
-        game.player.sprite = sprite.substring(0, sprite.length - 4) + '-star.png';
+       // game.player.sprite = sprite.substring(0, sprite.length - 4) + '-star.png';
 
         // The player will return to normal (sadly) after 1 second.
         setTimeout(function () {
@@ -372,14 +374,14 @@ Game.prototype.initializePlayer = function () {
         }, 1000);
     });
 
-    this.player.onGain(Item.Key, function (game) {
+    this.player.has(Item.Key, function (game) {
         game.levelUp();
     });
 
-    // All the water blocks on the scenario are turned into stone blocks
+    // All the water components on the scenario are turned into stone components
     // when the player gains a 'rock' item.
-    this.player.onGain(Item.Rock, function (game) {
-        var pos = []; // To keep track of the positions of the water blocks.
+    this.player.has(Item.Rock, function (game) {
+        var pos = []; // To keep track of the positions of the water components.
         var level = game.level;
 
         for (var row = 0; row < game.scenario.height; ++row) {
@@ -404,17 +406,17 @@ Game.prototype.initializePlayer = function () {
 
     // Each enemy speed will be divided by 3 if the
     // player gains a blue gem ...
-    this.player.onGain(Item.BlueGem, function (game) {
+    this.player.has(Item.BlueGem, function (game) {
         var level = game.level;
-        for (var i = 0; i < game.enemies.length; ++i) {
-            game.enemies[i].speed /= 3;
+        for (var i = 0; i < game.allEnemies.length; ++i) {
+            game.allEnemies[i].speed /= 3;
         }
 
         // ... for 1 second.
         setTimeout(function () {
             if (game.level === level) {
-                for (var i = 0; i < game.enemies.length; ++i) {
-                    game.enemies[i].speed *= 3;
+                for (var i = 0; i < game.allEnemies.length; ++i) {
+                    game.allEnemies[i].speed *= 3;
                 }
             }
         }, 1000);
@@ -422,25 +424,25 @@ Game.prototype.initializePlayer = function () {
 
     // The enemies will be freezed for 1 second if the
     // player is in possession of a green gem.
-    this.player.onGain(Item.GreenGem, function (game) {
+    this.player.has(Item.GreenGem, function (game) {
         var speeds = []; // To keep track of the enemies previous speed.
         var level = game.level;
 
         for (var i = 0; i < game.numEnemies; ++i) {
-            speeds.push(game.enemies[i].speed);
-            game.enemies[i].speed = 0;
+            speeds.push(game.allEnemies[i].speed);
+            game.allEnemies[i].speed = 0;
         }
 
         setTimeout(function () {
             if (game.level === level) {
-                for (var i = 0; i < game.enemies.length; ++i) {
-                    game.enemies[i].speed = speeds[i];
+                for (var i = 0; i < game.allEnemies.length; ++i) {
+                    game.allEnemies[i].speed = speeds[i];
                 }
             }
         }, 1000);
     });
 
-    this.player.onGain(Item.OrangeGem, function (game) {
+    this.player.has(Item.OrangeGem, function (game) {
         // Nothing for now.
     });
 };
@@ -638,14 +640,14 @@ var Item = {
  * Scenario class.
  * Represents the scenario on which the game is played.
  * It is the first layer rendered.
- * @param {string} level A string representation of the scenario (columns:rows:roads:blocks:items).
+ * @param {string} level A string representation of the scenario (columns:rows:lanes:components:items).
  * @constructor
  */
 var Scenario = function (level) {
     // Array of strings containing the different parts of the scenario.
     // data[0] = number of columns.
     // data[1] = number of rows.
-    // data[2] = list of roads.
+    // data[2] = list of lanes.
     // data[3] = scenario map.
     // data[4] = items map.
     var data = level.split(':');
@@ -666,14 +668,14 @@ var Scenario = function (level) {
      * List of row indexes on which enemies can be spawned.
      * @type {Array.<number>}
      */
-    this.roads = [];
+    this.lanes = [];
 
     // An array of string, each string is a row index.
-    var roadsData = data[2].split(',');
-    for (var i = 0; i < roadsData.length; ++i) {
-        // Convert each roadsData element to int and
-        // append it to {@code this.roads}
-        this.roads.push(parseInt(roadsData[i]));
+    var lanesData = data[2].split(',');
+    for (var i = 0; i < lanesData.length; ++i) {
+        // Convert each lanesData element to int and
+        // append it to {@code this.lanes}
+        this.lanes.push(parseInt(lanesData[i]));
     }
 
     /**
@@ -681,7 +683,7 @@ var Scenario = function (level) {
      * one of the values of the enumeration {@code Component}.
      * @type {string}
      */
-    this.blocks = data[3];
+    this.components = data[3];
 
     // The items part of the string {@code level} may be
     // omitted. We must then check if it is available
@@ -711,7 +713,7 @@ var Scenario = function (level) {
  * @return {Component}
  */
 Scenario.prototype.getComponent = function (row, col) {
-    return this.blocks.charAt(row * this.width + col);
+    return this.components.charAt(row * this.width + col);
 };
 
 /**
@@ -724,7 +726,7 @@ Scenario.prototype.getComponent = function (row, col) {
 Scenario.prototype.setComponent = function (row, col, newComponent) {
     var index = row * this.width + col;
 
-    this.blocks = this.blocks.substring(0, index) + newComponent + this.blocks.substring(index + 1);
+    this.components = this.components.substring(0, index) + newComponent + this.components.substring(index + 1);
 };
 
 /**
@@ -749,7 +751,7 @@ Scenario.prototype.setItem = function (row, col, newItem) {
     // initialize {@code this.items} before modifying it.
     if (this.items === undefined) {
         this.items = '';
-        for (var i = 0; i < this.blocks.length; ++i) {
+        for (var i = 0; i < this.components.length; ++i) {
             this.items += 'n';
         }
     }
@@ -855,11 +857,11 @@ Enemy.prototype.update = function (dt) {
 
     if (this.x >= this.game.scenario.width) {
         // Spawn an enemy at the left, off the scenario to have the impression that
-        // the roads are not limited by the dimensions of the scenario.
+        // the lanes are not limited by the dimensions of the scenario.
         this.x = -1;
 
-        // Randomely choose a road on which spawn the enemy.
-        this.y = this.game.scenario.roads[this.game.randomInt(0, this.game.scenario.roads.length - 1)];
+        // Randomely choose a lane on which spawn the enemy.
+        this.y = this.game.scenario.lanes[this.game.randomInt(0, this.game.scenario.lanes.length - 1)];
 
         // Randomely choose a speed at which the enemy will run between enemies minimal and maximal speeds.
         this.speed = this.game.randomInt(this.game.minEnemySpeed, this.game.maxEnemySpeed);
@@ -1000,7 +1002,7 @@ Player.prototype.moveTo = function (x, y) {
 
 
 /**
- * CharacterSelector class.
+ * Selector class.
  * Used to select a character.
  * @constructor
  */
